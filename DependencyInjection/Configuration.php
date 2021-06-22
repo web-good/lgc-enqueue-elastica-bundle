@@ -38,10 +38,10 @@ class Configuration implements ConfigurationInterface
                                     ->booleanNode('remove')->defaultTrue()->end()
                                     ->scalarNode('connection')->defaultValue('default')->cannotBeEmpty()->end()
                                     ->scalarNode('index_name')->isRequired()->cannotBeEmpty()->end()
-                                    ->scalarNode('type_name')->isRequired()->cannotBeEmpty()->end()
                                     ->scalarNode('model_class')->isRequired()->cannotBeEmpty()->end()
                                     ->scalarNode('model_id')->defaultValue('id')->cannotBeEmpty()->end()
                                     ->scalarNode('repository_method')->defaultValue('find')->cannotBeEmpty()->end()
+                                    ->scalarNode('delivery_delay')->defaultNull()->end()
                     ->end()
         ;
 

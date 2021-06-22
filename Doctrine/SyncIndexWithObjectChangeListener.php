@@ -1,7 +1,7 @@
 <?php
 namespace Enqueue\ElasticaBundle\Doctrine;
 
-use Doctrine\Common\Persistence\Event\LifecycleEventArgs;
+use Doctrine\Persistence\Event\LifecycleEventArgs;
 use Doctrine\ORM\Event\PostFlushEventArgs;
 use Enqueue\ElasticaBundle\Doctrine\Queue\Commands;
 use Enqueue\ElasticaBundle\Doctrine\Queue\SyncIndexWithObjectChangeProcessor as SyncProcessor;
@@ -100,11 +100,10 @@ final class SyncIndexWithObjectChangeListener implements EventSubscriber
             'model_id' => $this->config['model_id'],
             'id' => $id,
             'index_name' => $this->config['index_name'],
-            'type_name' => $this->config['type_name'],
             'repository_method' => $this->config['repository_method'],
         ]));
 
-        $this->context->createProducer()->send($queue, $message);
+        $this->context->createProducer()->setDeliveryDelay($this->config['delivery_delay'])->send($queue, $message);
     }
 
     /**
