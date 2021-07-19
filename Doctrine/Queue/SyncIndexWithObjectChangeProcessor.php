@@ -4,6 +4,7 @@ namespace Enqueue\ElasticaBundle\Doctrine\Queue;
 use Enqueue\Client\CommandSubscriberInterface;
 use Enqueue\Consumption\QueueSubscriberInterface;
 use Enqueue\Consumption\Result;
+use Enqueue\ElasticaBundle\KafkaTopicName;
 use Enqueue\Util\JSON;
 use FOS\ElasticaBundle\Persister\PersisterRegistry;
 use FOS\ElasticaBundle\Provider\IndexableInterface;
@@ -109,7 +110,7 @@ final class SyncIndexWithObjectChangeProcessor implements Processor, CommandSubs
     {
         return [
             'command' => Commands::SYNC_INDEX_WITH_OBJECT_CHANGE,
-            'queue' => Commands::SYNC_INDEX_WITH_OBJECT_CHANGE,
+            'queue' => KafkaTopicName::getTopicNameChangeEntity(),
             'prefix_queue' => false,
             'exclusive' => true,
         ];
@@ -117,6 +118,6 @@ final class SyncIndexWithObjectChangeProcessor implements Processor, CommandSubs
 
     public static function getSubscribedQueues(): array
     {
-        return [Commands::SYNC_INDEX_WITH_OBJECT_CHANGE];
+        return [KafkaTopicName::getTopicNameChangeEntity()];
     }
 }

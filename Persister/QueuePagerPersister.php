@@ -1,6 +1,7 @@
 <?php
 namespace Enqueue\ElasticaBundle\Persister;
 
+use Enqueue\ElasticaBundle\KafkaTopicName;
 use Enqueue\ElasticaBundle\Queue\Commands;
 use Enqueue\Util\JSON;
 use FOS\ElasticaBundle\Persister\Event\PostAsyncInsertObjectsEvent;
@@ -43,14 +44,14 @@ final class QueuePagerPersister implements PagerPersisterInterface
         $pager->setMaxPerPage(empty($options['max_per_page']) ? 100 : $options['max_per_page']);
 
         $options = array_replace([
-            'max_per_page' => $pager->getMaxPerPage(),
-            'first_page' => $pager->getCurrentPage(),
-            'last_page' => $pager->getNbPages(),
-            'populate_queue' => Commands::POPULATE,
-            'populate_reply_queue' => null,
-            'reply_receive_timeout' => 5000, // ms
-            'limit_overall_reply_time' => 180, // sec
-        ], $options);
+                                     'max_per_page' => 100,
+                                     'first_page' => $pager->getCurrentPage(),
+                                     'last_page' => $pager->getNbPages(),
+                                     'populate_queue' => KafkaTopicName::getTopicNamePopulate(),
+                                     #'populate_reply_queue' => 'enqueue_elastica.populate',
+                                     'reply_receive_timeout' => 5000, // ms
+                                     'limit_overall_reply_time' => 180, // sec
+                                 ], $options);
 
         $pager->setCurrentPage($options['first_page']);
 
@@ -73,6 +74,8 @@ final class QueuePagerPersister implements PagerPersisterInterface
         $lastPage = min($options['last_page'], $pager->getNbPages());
         $page = $pager->getCurrentPage();
         $sentCount = 0;
+        dump($page, $lastPage);
+
         do {
             $pager->setCurrentPage($page);
 
@@ -87,9 +90,9 @@ final class QueuePagerPersister implements PagerPersisterInterface
             );
 
             $message = $this->context->createMessage(JSON::encode([
-                'options' => $filteredOptions,
-                'page' => $page,
-            ]));
+                                                                      'options' => $filteredOptions,
+                                                                      'page' => $page,
+                                                                  ]));
             $message->setReplyTo($replyQueue->getQueueName());
 
             // Because of https://github.com/php-enqueue/enqueue-dev/issues/907
@@ -103,6 +106,7 @@ final class QueuePagerPersister implements PagerPersisterInterface
 
         $consumer = $this->context->createConsumer($replyQueue);
         $limitTime = microtime(true) + $options['limit_overall_reply_time'];
+
         while ($sentCount) {
             if ($message = $consumer->receive($options['reply_receive_timeout'])) {
                 $sentCount--;
@@ -122,6 +126,7 @@ final class QueuePagerPersister implements PagerPersisterInterface
                     $data['options']
                 );
                 $this->dispatcher->dispatch($event);
+
             }
 
             if (microtime(true) > $limitTime) {

@@ -4,6 +4,7 @@ namespace Enqueue\ElasticaBundle\Queue;
 use Enqueue\Client\CommandSubscriberInterface;
 use Enqueue\Consumption\QueueSubscriberInterface;
 use Enqueue\Consumption\Result;
+use Enqueue\ElasticaBundle\KafkaTopicName;
 use FOS\ElasticaBundle\Persister\InPlacePagerPersister;
 use FOS\ElasticaBundle\Persister\PagerPersisterRegistry;
 use FOS\ElasticaBundle\Provider\PagerProviderRegistry;
@@ -98,7 +99,7 @@ final class PopulateProcessor implements Processor, CommandSubscriberInterface, 
     {
         return [
             'command' => Commands::POPULATE,
-            'queue' => Commands::POPULATE,
+            'queue' => KafkaTopicName::getTopicNamePopulate(),
             'prefix_queue' => true,
             'exclusive' => true,
         ];
@@ -106,6 +107,6 @@ final class PopulateProcessor implements Processor, CommandSubscriberInterface, 
 
     public static function getSubscribedQueues(): array
     {
-        return [Commands::POPULATE];
+        return [KafkaTopicName::getTopicNamePopulate()];
     }
 }

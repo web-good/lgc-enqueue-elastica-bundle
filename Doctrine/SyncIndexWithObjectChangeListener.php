@@ -5,6 +5,7 @@ use Doctrine\Persistence\Event\LifecycleEventArgs;
 use Doctrine\ORM\Event\PostFlushEventArgs;
 use Enqueue\ElasticaBundle\Doctrine\Queue\Commands;
 use Enqueue\ElasticaBundle\Doctrine\Queue\SyncIndexWithObjectChangeProcessor as SyncProcessor;
+use Enqueue\ElasticaBundle\KafkaTopicName;
 use Enqueue\Util\JSON;
 use Interop\Queue\Context;
 use Doctrine\Common\EventSubscriber;
@@ -92,16 +93,16 @@ final class SyncIndexWithObjectChangeListener implements EventSubscriber
      */
     private function sendUpdateIndexMessage($action, $id)
     {
-        $queue = $this->context->createQueue(Commands::SYNC_INDEX_WITH_OBJECT_CHANGE);
+        $queue = $this->context->createQueue(KafkaTopicName::getTopicNameChangeEntity());
 
         $message = $this->context->createMessage(JSON::encode([
-            'action' => $action,
-            'model_class' => $this->modelClass,
-            'model_id' => $this->config['model_id'],
-            'id' => $id,
-            'index_name' => $this->config['index_name'],
-            'repository_method' => $this->config['repository_method'],
-        ]));
+                                                                  'action' => $action,
+                                                                  'model_class' => $this->modelClass,
+                                                                  'model_id' => $this->config['model_id'],
+                                                                  'id' => $id,
+                                                                  'index_name' => $this->config['index_name'],
+                                                                  'repository_method' => $this->config['repository_method'],
+                                                              ]));
 
         $this->context->createProducer()->setDeliveryDelay($this->config['delivery_delay'])->send($queue, $message);
     }
